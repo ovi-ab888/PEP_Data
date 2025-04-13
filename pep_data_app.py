@@ -1,4 +1,28 @@
 import streamlit as st
+
+# 🔐 
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == "password":  
+            st.session_state["authenticated"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["authenticated"] = False
+
+    if "authenticated" not in st.session_state:
+        st.text_input("🔐 Enter password to access the app", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["authenticated"]:
+        st.error("❌ wrong password")
+        return False
+    else:
+        return True
+
+# ✅ 
+if check_password():
+    st.title("😊 Hello! Ovi Convert your PDF to CSV")
+    
+import streamlit as st
 import fitz  # PyMuPDF
 import pandas as pd
 import re
@@ -6,7 +30,7 @@ from io import BytesIO
 from datetime import datetime, timedelta
 import os
 
-st.title("📦 Hello! Ovi Convert your PDF to CSV")
+st.title("😊 Hello! Ovi Convert your PDF to CSV")
 
 uploaded_file = st.file_uploader("Upload PDF file", type=["pdf"])
 

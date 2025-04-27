@@ -82,7 +82,7 @@ def extract_data_from_pdf(file):
             "COLLECTION": collection_value,
             "COLOUR_SKU": f"{colour} • SKU {skus[i]}",
             "STYLE": f"STYLE {style_value} • S/S25",
-            "Batch": f"Batch No. {batch}",
+            "Batch": f"Batch no. {batch}",
             "barcode": barcodes[i]
         })
 

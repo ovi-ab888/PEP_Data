@@ -16,7 +16,7 @@ def extract_colour_from_page2(text):
     skip_keywords = [
         "PURCHASE PRICE", "COLOUR", "PANTONE NO", "PURCHASE PRICE",
         "TOTAL ORDERED QUANTITY", "TOTAL", "TOTAL ORDERED QTY", "PURCHASE ORDER",
-        "SUPPLIER", "PURCHASE", "PRICE", "ORDERED QTY", "Sizes"
+        "SUPPLIER", "PURCHASE", "PRICE", "ORDERED QTY", "Sizes", "1234567890"
     ]
 
     filtered_lines = [

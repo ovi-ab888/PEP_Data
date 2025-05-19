@@ -34,6 +34,7 @@ DEPARTMENT_PRODUCTS = {
             "RO": "T-shirt fetițe", "RS": "potkošulja za devojčice. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "dekliška majica, kratki rokav", "SK": "dievčenské tričko"
         }
+        
          "Girls' sweatshirt": {
             "EN": "Girls' sweatshirt", "BG": "Блуза за момичета", 
             "BiH": "Dukserica za djevojčice. Sastav materijala na ušivenoj etiketi.",
@@ -44,7 +45,8 @@ DEPARTMENT_PRODUCTS = {
             "PT": "Camisola de manga comprida para rapariga", "RO": "Bluză fetițe",
             "RS": "Dukserica za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "Dekliška majica, dolgi rokav", "SK": "Dievčenská mikina"
-        },
+        }
+        
         "Girls' shirt": {
             "EN": "Girls' shirt", "BG": "Риза за момичета",
             "BiH": "Košulja za djevojčice. Sastav materijala na ušivenoj etiketi.",
@@ -55,7 +57,8 @@ DEPARTMENT_PRODUCTS = {
             "PT": "Camisa para rapariga", "RO": "Cămașă fetițe",
             "RS": "Košulja za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "Dekliška srajca", "SK": "Dievčenská košeľa"
-        },
+        }
+        
         "Girls' pullover sweater": {
             "EN": "Girls' pullover sweater", "BG": "Пуловер за момичета",
             "BiH": "Džemper za djevojčice. Sastav materijala na ušivenoj etiketi.",
@@ -68,6 +71,7 @@ DEPARTMENT_PRODUCTS = {
             "SI": "Dekliški pulover", "SK": "Dievčenský sveter"
         }
     },
+    
     "Boys Department": {
         "boys t-shirt": {
             "EN": "boys t-shirt", "BG": "Момчешка тениска", "BiH": "t-shirt za dječake. Sastav materijala na ušivenoj etiketi.",

@@ -134,7 +134,7 @@ def extract_colour_from_page2(text):
     skip_keywords = [
         "PURCHASE PRICE", "COLOUR", "PANTONE NO", "TOTAL ORDERED QUANTITY",
         "TOTAL", "TOTAL ORDERED QTY", "PURCHASE ORDER", "SUPPLIER", "PURCHASE",
-        "PRICE", "ORDERED QTY", "Sizes", "1234567890", "TPG", "TPX", "USD", ","
+        "PRICE", "ORDERED QTY", "Sizes", "1234567890", "TPG", "TPX", "USD", ",", "PEPCO", "Poland", "ul. Strzeszyńska 73A, 60-479 Poznań", "NIP 782-21-31-157"
     ]
     filtered_lines = [
         line for line in lines

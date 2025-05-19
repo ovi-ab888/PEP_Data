@@ -33,7 +33,7 @@ DEPARTMENT_PRODUCTS = {
             "LV": "T-krekls meitenēm", "PL": "t-shirt dziewczęcy", "PT": "T-shirt para rapariga",
             "RO": "T-shirt fetițe", "RS": "potkošulja za devojčice. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "dekliška majica, kratki rokav", "SK": "dievčenské tričko"
-        }
+        },
         
          "Girls' sweatshirt": {
             "EN": "Girls' sweatshirt", "BG": "Блуза за момичета", 
@@ -45,7 +45,7 @@ DEPARTMENT_PRODUCTS = {
             "PT": "Camisola de manga comprida para rapariga", "RO": "Bluză fetițe",
             "RS": "Dukserica za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "Dekliška majica, dolgi rokav", "SK": "Dievčenská mikina"
-        }
+        },
         
         "Girls' shirt": {
             "EN": "Girls' shirt", "BG": "Риза за момичета",
@@ -57,7 +57,7 @@ DEPARTMENT_PRODUCTS = {
             "PT": "Camisa para rapariga", "RO": "Cămașă fetițe",
             "RS": "Košulja za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "Dekliška srajca", "SK": "Dievčenská košeľa"
-        }
+        },
         
         "Girls' pullover sweater": {
             "EN": "Girls' pullover sweater", "BG": "Пуловер за момичета",
@@ -69,7 +69,7 @@ DEPARTMENT_PRODUCTS = {
             "PT": "Suéter para rapariga", "RO": "Pulover fetițe",
             "RS": "Džemper za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "Dekliški pulover", "SK": "Dievčenský sveter"
-        }
+        },
     },
     
     "Boys Department": {

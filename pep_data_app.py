@@ -240,7 +240,7 @@ DEPARTMENT_PRODUCTS = {
         "RS": "Farmerke za dečake. Sastav materijala nalazi se na ušivenoj etiketi",
         "SI": "Fantovske kavbojke",
         "SK": "Chlapčenské džínsy"
-    }
+    },
 },
         "Baby boy Department": {
         "boys t-shirt": {
@@ -601,7 +601,7 @@ DEPARTMENT_PRODUCTS = {
             "LV": "Vīriešu t-krekls", "PL": "t-shirt męski", "PT": "T-shirt para homem",
             "RO": "Tricou bărbați", "RS": "muška majica. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "moška majica", "SK": "pánske tričko"
-        }
+        },
     },
     "Women's Department": {
         "Women's T-shirt": {

@@ -220,7 +220,7 @@ if uploaded_pdf:
         
         # Add translations and pricing
         translations = DEPARTMENT_PRODUCTS[selected_dept][product_type]
-        df['product_name'] = " | ".join([f"{lang}| {text}" for lang, text in translations.items()])
+        df['product_name'] = "|".join([f"{lang}| {text}" for lang, text in translations.items()])
         
         pln_price = st.number_input("Enter PLN Price", min_value=0.0, step=0.01, format="%.2f")
         

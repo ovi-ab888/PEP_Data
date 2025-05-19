@@ -614,6 +614,7 @@ DEPARTMENT_PRODUCTS = {
             "SI": "ženska majica", "SK": "Dámska blúzka"
         }
     }
+  }
 }
 
 # ========== HELPER FUNCTIONS ==========

@@ -34,6 +34,39 @@ DEPARTMENT_PRODUCTS = {
             "RO": "T-shirt fetițe", "RS": "potkošulja za devojčice. Sastav materijala nalazi se na ušivenoj etiketi",
             "SI": "dekliška majica, kratki rokav", "SK": "dievčenské tričko"
         }
+         "Girls' sweatshirt": {
+            "EN": "Girls' sweatshirt", "BG": "Блуза за момичета", 
+            "BiH": "Dukserica za djevojčice. Sastav materijala na ušivenoj etiketi.",
+            "CZ": "Dívčí blůza", "DE": "Sweatshirt für Mädchen", "EE": "Tüdrukute pluus",
+            "ES": "Sudadera de niña / dessuadora nena", "GR": "Φανέλα για μωρό κορίτσι",
+            "HR": "Majica za djevojčice", "HU": "Lány blúz", "IT": "Felpa per ragazze",
+            "LT": "Bliuzonas mergaitėms", "LV": "Meiteņu blūze", "PL": "Bluza dziewczęca",
+            "PT": "Camisola de manga comprida para rapariga", "RO": "Bluză fetițe",
+            "RS": "Dukserica za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
+            "SI": "Dekliška majica, dolgi rokav", "SK": "Dievčenská mikina"
+        },
+        "Girls' shirt": {
+            "EN": "Girls' shirt", "BG": "Риза за момичета",
+            "BiH": "Košulja za djevojčice. Sastav materijala na ušivenoj etiketi.",
+            "CZ": "Dívčí košile", "DE": "Hemd für Mädchen", "EE": "Tüdrukute särk",
+            "ES": "Camisa de niña / camisa nena", "GR": "Πουκάμισο για μωρό κορίτσι",
+            "HR": "Košulja za djevojčice", "HU": "Lány ing", "IT": "Camicia per ragazze",
+            "LT": "Marškiniai mergaitei", "LV": "Meiteņu krekls", "PL": "Koszula dziewczęca",
+            "PT": "Camisa para rapariga", "RO": "Cămașă fetițe",
+            "RS": "Košulja za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
+            "SI": "Dekliška srajca", "SK": "Dievčenská košeľa"
+        },
+        "Girls' pullover sweater": {
+            "EN": "Girls' pullover sweater", "BG": "Пуловер за момичета",
+            "BiH": "Džemper za djevojčice. Sastav materijala na ušivenoj etiketi.",
+            "CZ": "Dívčí svetr", "DE": "Pullover für Mädchen", "EE": "Tüdrukute kampsun",
+            "ES": "Suéter de niña / suèter nena", "GR": "Πουλόβερ για μωρό κορίτσι",
+            "HR": "Vesta za djevojčice", "HU": "Lány pulóver", "IT": "Maglione per ragazze",
+            "LT": "Megztinis mergaitėms", "LV": "Meiteņu svīteris", "PL": "Sweter dziewczęcy",
+            "PT": "Suéter para rapariga", "RO": "Pulover fetițe",
+            "RS": "Džemper za devojčicu. Sastav materijala nalazi se na ušivenoj etiketi",
+            "SI": "Dekliški pulover", "SK": "Dievčenský sveter"
+        }
     },
     "Boys Department": {
         "boys t-shirt": {

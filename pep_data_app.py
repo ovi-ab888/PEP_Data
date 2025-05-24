@@ -42,21 +42,26 @@ def format_product_translations(product_name, translation_row):
         'RS': " Sastav materijala nalazi se na ušivenoj etiketi.",
     }
     
-    exclude_languages = ['ES_CA', 'FR']
+    # Languages to completely exclude from output
+    exclude_languages = ['ES_CA', 'FR']  # Added FR here
     
     for lang, value in translation_row.items():
         if lang in ['DEPARTMENT', 'PRODUCT_NAME'] or lang in exclude_languages:
             continue
             
         if lang in country_suffixes:
+            # For BiH and RS, use the translated value if available
             base_text = value if pd.notna(value) else product_name
+            # Add dot after product name if not already present
             if not base_text.endswith('.'):
                 base_text += '.'
             formatted_value = f"{base_text}{country_suffixes[lang]}"
         elif lang == 'ES':
+            # For ES, append translation after slash
             es_value = value.strip() if pd.notna(value) else ''
             formatted_value = f"{product_name} / {es_value}" if es_value else product_name
         else:
+            # For other languages, use the translation if available
             formatted_value = value if pd.notna(value) else product_name
             
         formatted.append(f"|{lang}| {formatted_value}")

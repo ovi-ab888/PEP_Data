@@ -37,24 +37,34 @@ def load_product_translations():
 
 def format_product_translations(product_name, translation_row):
     formatted = []
+    country_suffixes = {
+        'BiH': " Sastav materijala na ušivenoj etiketi.",
+        'RS': " Sastav materijala nalazi se na ušivenoj etiketi.",
+    }
+    
+    exclude_languages = ['ES_CA', 'FR']
+    
     for lang, value in translation_row.items():
-        if lang in ['DEPARTMENT', 'PRODUCT_NAME'] or pd.isna(value):
+        if lang in ['DEPARTMENT', 'PRODUCT_NAME'] or lang in exclude_languages:
             continue
-        if lang == 'BiH':
-            value = f"{product_name}. Sastav materijala na ušivenoj etiketi."
-        elif lang == 'RS':
-            value = f"{product_name}. Sastav materijala nalazi se na ušivenoj etiketi"
+            
+        if lang in country_suffixes:
+            base_text = value if pd.notna(value) else product_name
+            if not base_text.endswith('.'):
+                base_text += '.'
+            formatted_value = f"{base_text}{country_suffixes[lang]}"
         elif lang == 'ES':
-            value = f"{product_name} / {value.strip()}"
-        elif lang == 'ES_CA':
-            continue
+            es_value = value.strip() if pd.notna(value) else ''
+            formatted_value = f"{product_name} / {es_value}" if es_value else product_name
         else:
-            value = product_name
-        formatted.append(f"|{lang}| {value}")
+            formatted_value = value if pd.notna(value) else product_name
+            
+        formatted.append(f"|{lang}| {formatted_value}")
+    
     return " ".join(formatted)
 
 def format_number(value, currency):
-    if currency in ['EUR', 'BGN', 'BAM', 'PLN', 'RON']:
+    if currency in ['EUR', 'BGN', 'BAM', 'RON', 'PLN']:
         return f"{float(value):,.2f}".replace(".", ",")
     return str(int(float(value)))
 
@@ -83,7 +93,8 @@ def extract_data_from_pdf(file):
         doc = fitz.open(stream=file.read(), filetype="pdf")
         if len(doc) < 3:
             st.error("PDF must have at least 3 pages.")
-            return []
+            return None
+            
         page1 = doc[0].get_text()
         style = re.search(r"\b\d{6}\b", page1)
         collection = re.search(r"Collection\s*\.{2,}\s*(.+)", page1)
@@ -100,6 +111,7 @@ def extract_data_from_pdf(file):
         all_barcodes = re.findall(r"\b\d{13}\b", page3)
         excluded = set(re.findall(r"barcode:\s*(\d{13});", page3))
         valid_barcodes = [b for b in all_barcodes if b not in excluded]
+        
         return [{
             "COLLECTION": collection.group(1).split("-")[0].strip() if collection else "UNKNOWN",
             "COLOUR_SKU": f"{colour} • SKU {sku}",
@@ -109,24 +121,24 @@ def extract_data_from_pdf(file):
         } for sku, barcode in zip(skus, valid_barcodes)]
     except Exception as e:
         st.error(f"PDF error: {str(e)}")
-        return []
+        return None
 
 # ========= MAIN ==========
 uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"])
 translations_df = load_product_translations()
 
-# Example block inside: if uploaded_pdf and not translations_df.empty:
 if uploaded_pdf and not translations_df.empty:
-    depts = translations_df['DEPARTMENT'].dropna().unique().tolist()
-    selected_dept = st.selectbox("Select Department", options=depts)
-
-    filtered = translations_df[translations_df['DEPARTMENT'] == selected_dept]
-    products = filtered['PRODUCT_NAME'].dropna().unique().tolist()
-    product_type = st.selectbox("Select Product Type", options=products)
-
+    # First extract data from PDF
     result_data = extract_data_from_pdf(uploaded_pdf)
+    
+    if result_data:  # Only proceed if we successfully extracted data
+        depts = translations_df['DEPARTMENT'].dropna().unique().tolist()
+        selected_dept = st.selectbox("Select Department", options=depts)
 
-    if result_data:
+        filtered = translations_df[translations_df['DEPARTMENT'] == selected_dept]
+        products = filtered['PRODUCT_NAME'].dropna().unique().tolist()
+        product_type = st.selectbox("Select Product Type", options=products)
+
         df = pd.DataFrame(result_data)
         product_row = filtered[filtered['PRODUCT_NAME'] == product_type]
         if not product_row.empty:
@@ -134,7 +146,6 @@ if uploaded_pdf and not translations_df.empty:
         else:
             df['product_name'] = ""
 
-        # ✅ এই জায়গা থেকে শুরু হচ্ছে PLN + Currency ব্লক
         pln_price = st.number_input("Enter PLN Price", min_value=0.0, step=0.01, format="%.2f")
         if pln_price:
             currency_values = find_closest_price(pln_price)
@@ -152,15 +163,15 @@ if uploaded_pdf and not translations_df.empty:
 
                 edited_df = st.data_editor(df)
 
-                from io import StringIO
-                import csv as pycsv
-
                 csv_buffer = StringIO()
-                edited_df.to_csv(csv_buffer, index=False, sep=';', encoding='utf-8', quoting=pycsv.QUOTE_ALL)
+                writer = pycsv.writer(csv_buffer, delimiter=';', quoting=pycsv.QUOTE_ALL)
+                writer.writerow(edited_df.columns)
+                for row in edited_df.itertuples(index=False):
+                    writer.writerow(row)
 
                 st.download_button(
                     "📥 Download CSV",
-                    csv_buffer.getvalue().encode('utf-8'),
+                    csv_buffer.getvalue().encode('utf-8-sig'),
                     file_name=f"{os.path.splitext(uploaded_pdf.name)[0]}.csv",
                     mime="text/csv"
                 )

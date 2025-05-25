@@ -9,9 +9,7 @@ import csv as pycsv
 from datetime import datetime, timedelta
 import os
 
-st.title("Hello! Ovi create your data")
-
-# ========== PRICE DATA ==========
+# ========== PRICE DATA (For PEPCO) ==========
 PRICE_DATA = {
     'PLN': [0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.3, 1.5, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 12, 15, 17, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250],
     'EUR': [0.05, 0.05, 0.1, 0.1, 0.1, 0.15, 0.2, 0.2, 0.25, 0.25, 0.35, 0.4, 0.4, 0.45, 0.5, 0.65, 0.8, 0.9, 1, 1.2, 1.3, 1.5, 1.8, 2, 2.3, 2.5, 3, 4, 4.5, 4.5, 5, 5.5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 19, 20, 22, 23, 24, 25, 28, 30, 33, 35, 38, 40, 43, 45, 48, 50, 53],
@@ -23,6 +21,7 @@ PRICE_DATA = {
     'HUF': [12, 25, 35, 35, 45, 55, 60, 65, 75, 100, 120, 130, 150, 180, 200, 250, 300, 350, 400, 430, 450, 500, 600, 700, 800, 1000, 1200, 1500, 1600, 1700, 1800, 2000, 2300, 2500, 3000, 3500, 4000, 4500, 4800, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 25000]
 }
 
+# ========== PEPCO FUNCTIONS ==========
 @st.cache_data(ttl=600)
 def load_product_translations():
     sheet_id = "12QAe57IsVCa9-0D06tXYUUpfHbpRTsl2"
@@ -43,7 +42,7 @@ def format_product_translations(product_name, translation_row):
     }
     
     # Languages to completely exclude from output
-    exclude_languages = ['ES_CA', 'FR']  # Added FR here
+    exclude_languages = ['ES_CA', 'FR']
     
     for lang, value in translation_row.items():
         if lang in ['DEPARTMENT', 'PRODUCT_NAME'] or lang in exclude_languages:
@@ -128,44 +127,105 @@ def extract_data_from_pdf(file):
         st.error(f"PDF error: {str(e)}")
         return None
 
-# ========= MAIN ==========
-uploaded_pdf = st.file_uploader("Upload PDF file", type=["pdf"])
-translations_df = load_product_translations()
+# ========== PEP&CO FUNCTIONS ==========
+def extract_story(page1_text):
+    match = re.search(r"Story\s+(.+)", page1_text)
+    return match.group(1).split("-")[0].strip() if match else "UNKNOWN"
 
-if uploaded_pdf and not translations_df.empty:
-    # First extract data from PDF
-    result_data = extract_data_from_pdf(uploaded_pdf)
+def extract_table_from_page2(page2_text):
+    entries = []
+    pattern = re.compile(r"(\d{6})\s+([A-Za-z\s\-]+?:\d+)\s+(\d{13})\s+\d+\s+\d+\s+(\d{4})\s+(\d{6})")
+    matches = pattern.findall(page2_text)
+
+    for match in matches:
+        sku, raw_desc, barcode, style, style_code = match
+        desc_clean = raw_desc.split(":")[0].strip()
+        entries.append({
+            "sku": sku,
+            "sku_description": desc_clean,
+            "barcode": barcode,
+            "style": style_code
+        })
+    return entries
+
+def process_pepco_pdf(uploaded_pdf):
+    translations_df = load_product_translations()
     
-    if result_data:  # Only proceed if we successfully extracted data
-        depts = translations_df['DEPARTMENT'].dropna().unique().tolist()
-        selected_dept = st.selectbox("Select Department", options=depts)
+    if uploaded_pdf and not translations_df.empty:
+        # First extract data from PDF
+        result_data = extract_data_from_pdf(uploaded_pdf)
+        
+        if result_data:  # Only proceed if we successfully extracted data
+            depts = translations_df['DEPARTMENT'].dropna().unique().tolist()
+            selected_dept = st.selectbox("Select Department", options=depts)
 
-        filtered = translations_df[translations_df['DEPARTMENT'] == selected_dept]
-        products = filtered['PRODUCT_NAME'].dropna().unique().tolist()
-        product_type = st.selectbox("Select Product Type", options=products)
+            filtered = translations_df[translations_df['DEPARTMENT'] == selected_dept]
+            products = filtered['PRODUCT_NAME'].dropna().unique().tolist()
+            product_type = st.selectbox("Select Product Type", options=products)
 
-        df = pd.DataFrame(result_data)
-        product_row = filtered[filtered['PRODUCT_NAME'] == product_type]
-        if not product_row.empty:
-            df['product_name'] = format_product_translations(product_type, product_row.iloc[0])
-        else:
-            df['product_name'] = ""
+            df = pd.DataFrame(result_data)
+            product_row = filtered[filtered['PRODUCT_NAME'] == product_type]
+            if not product_row.empty:
+                df['product_name'] = format_product_translations(product_type, product_row.iloc[0])
+            else:
+                df['product_name'] = ""
 
-        pln_price = st.number_input("Enter PLN Price", min_value=0.0, step=0.01, format="%.2f")
-        if pln_price:
-            currency_values = find_closest_price(pln_price)
-            if currency_values:
-                for cur in ['EUR', 'BGN', 'BAM', 'RON', 'CZK', 'RSD', 'HUF']:
-                    df[cur] = currency_values.get(cur, "")
-                df['PLN'] = format_number(pln_price, 'PLN')
+            pln_price = st.number_input("Enter PLN Price", min_value=0.0, step=0.01, format="%.2f")
+            if pln_price:
+                currency_values = find_closest_price(pln_price)
+                if currency_values:
+                    for cur in ['EUR', 'BGN', 'BAM', 'RON', 'CZK', 'RSD', 'HUF']:
+                        df[cur] = currency_values.get(cur, "")
+                    df['PLN'] = format_number(pln_price, 'PLN')
 
-                final_cols = ['COLLECTION', 'COLOUR_SKU', 'STYLE', 'Batch', 'barcode',
-                              'EUR', 'BGN', 'BAM', 'RON', 'PLN', 'CZK', 'RSD', 'HUF', 'product_name']
-                df = df[final_cols]
+                    final_cols = ['COLLECTION', 'COLOUR_SKU', 'STYLE', 'Batch', 'barcode',
+                                  'EUR', 'BGN', 'BAM', 'RON', 'PLN', 'CZK', 'RSD', 'HUF', 'product_name']
+                    df = df[final_cols]
 
-                st.success("✅ Done!")
+                    st.success("✅ Done!")
+                    st.subheader("Edit Before Download")
+
+                    edited_df = st.data_editor(df)
+
+                    csv_buffer = StringIO()
+                    writer = pycsv.writer(csv_buffer, delimiter=';', quoting=pycsv.QUOTE_ALL)
+                    writer.writerow(edited_df.columns)
+                    for row in edited_df.itertuples(index=False):
+                        writer.writerow(row)
+
+                    st.download_button(
+                        "📥 Download CSV",
+                        csv_buffer.getvalue().encode('utf-8-sig'),
+                        file_name=f"{os.path.splitext(uploaded_pdf.name)[0]}.csv",
+                        mime="text/csv"
+                    )
+
+def process_pep_and_co_pdf(uploaded_file):
+    doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+    if len(doc) < 2:
+        st.error("❌ PDF must have at least 2 pages.")
+    else:
+        story_text = doc[0].get_text()
+        page2_text = doc[1].get_text()
+
+        story = extract_story(story_text)
+        entries = extract_table_from_page2(page2_text)
+
+        colour = st.text_input("🎨 Enter Colour:")
+        batch = st.text_input("📦 Enter Batch No:")
+
+        if colour and batch:
+            if entries:
+                for entry in entries:
+                    entry["story"] = story
+                    entry["COLOUR_SKU"] = f"{colour} • SKU {entry['sku']}"
+                    entry["STYLE"] = f"STYLE {entry['style']} • H/W26"
+                    entry["Batch"] = f"Batch no. {batch}"
+
+                df = pd.DataFrame(entries)[["story", "sku_description", "COLOUR_SKU", "STYLE", "Batch", "barcode"]]
+                st.dataframe(df)
+
                 st.subheader("Edit Before Download")
-
                 edited_df = st.data_editor(df)
 
                 csv_buffer = StringIO()
@@ -175,11 +235,28 @@ if uploaded_pdf and not translations_df.empty:
                     writer.writerow(row)
 
                 st.download_button(
-                    "📥 Download CSV",
+                    "📩 Download CSV",
                     csv_buffer.getvalue().encode('utf-8-sig'),
-                    file_name=f"{os.path.splitext(uploaded_pdf.name)[0]}.csv",
+                    file_name=f"{os.path.splitext(uploaded_file.name)[0]}.csv",
                     mime="text/csv"
                 )
+
+# ========== MAIN APP ==========
+st.title("PEPCO/PEP&CO Data Processor")
+
+# Select which brand to process
+brand = st.radio("Select Brand", ("PEPCO", "PEP&CO"))
+
+if brand == "PEPCO":
+    st.subheader("PEPCO Data Processing")
+    uploaded_pdf = st.file_uploader("Upload PEPCO Data file", type=["pdf"])
+    if uploaded_pdf:
+        process_pepco_pdf(uploaded_pdf)
+else:
+    st.subheader("PEP&CO Data Processing")
+    uploaded_file = st.file_uploader("Upload PEP&CO PDF", type="pdf")
+    if uploaded_file:
+        process_pep_and_co_pdf(uploaded_file)
 
 st.markdown("---")
 st.caption("This app developed by Ovi")

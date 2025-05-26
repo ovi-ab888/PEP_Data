@@ -9,6 +9,27 @@ import csv as pycsv
 from datetime import datetime, timedelta
 import os
 
+# Login UI
+st.title("🔐 Login Required")
+
+# Input fields
+username = st.text_input("Username")
+password = st.text_input("Password", type="password")
+
+# Load secrets
+users = st.secrets["users"]
+
+# Login check
+if st.button("Login"):
+    if username in users and users[username] == password:
+        st.success(f"✅ Welcome, {username}!")
+
+        # 🟢 অ্যাপের মূল অংশ এখানে রাখো
+        st.write("🎉 তোমার অ্যাপের content এখানে আসবে...")
+        
+    else:
+        st.error("❌ Invalid username or password")
+        
 # ========== PRICE DATA (For PEPCO) ==========
 PRICE_DATA = {
     'PLN': [0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.3, 1.5, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 12, 15, 17, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250],

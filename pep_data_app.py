@@ -9,27 +9,6 @@ import csv as pycsv
 from datetime import datetime, timedelta
 import os
 
-# Login UI
-st.title("🔐 Login Required")
-
-# Input fields
-username = st.text_input("Username")
-password = st.text_input("Password", type="password")
-
-# Load secrets
-users = st.secrets["users"]
-
-# Login check
-if st.button("Login"):
-    if username in users and users[username] == password:
-        st.success(f"✅ Welcome, {username}!")
-
-        # 🟢 অ্যাপের মূল অংশ এখানে রাখো
-        st.write("🎉 তোমার অ্যাপের content এখানে আসবে...")
-        
-    else:
-        st.error("❌ Invalid username or password")
-        
 # ========== PRICE DATA (For PEPCO) ==========
 PRICE_DATA = {
     'PLN': [0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.3, 1.5, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 12, 15, 17, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 250],
@@ -63,7 +42,7 @@ def format_product_translations(product_name, translation_row):
     }
     
     # Languages to completely exclude from output
-    exclude_languages = ['ES_CA', 'FR']
+    exclude_languages = ['FR']  # Removed ES_CA from exclude since we want to use it
     
     for lang, value in translation_row.items():
         if lang in ['DEPARTMENT', 'PRODUCT_NAME'] or lang in exclude_languages:
@@ -77,9 +56,15 @@ def format_product_translations(product_name, translation_row):
                 base_text += '.'
             formatted_value = f"{base_text}{country_suffixes[lang]}"
         elif lang == 'ES':
-            # For ES, append translation after slash
+            # For ES, use ES translation and append ES_CA if available
             es_value = value.strip() if pd.notna(value) else ''
-            formatted_value = f"{product_name} / {es_value}" if es_value else product_name
+            es_ca_value = translation_row.get('ES_CA', '').strip() if pd.notna(translation_row.get('ES_CA')) else ''
+            if es_value and es_ca_value:
+                formatted_value = f"{es_value} / {es_ca_value}"
+            elif es_value:
+                formatted_value = es_value
+            else:
+                formatted_value = product_name
         else:
             # For other languages, use the translation if available
             formatted_value = value if pd.notna(value) else product_name
@@ -232,8 +217,8 @@ def process_pep_and_co_pdf(uploaded_file):
         story = extract_story(story_text)
         entries = extract_table_from_page2(page2_text)
 
-        colour = st.text_input("🎨 Enter Colour:")
-        batch = st.text_input("📦 Enter Batch No:")
+        colour = st.text_input("Enter Colour:")
+        batch = st.text_input("Enter Batch No:")
 
         if colour and batch:
             if entries:
@@ -244,8 +229,8 @@ def process_pep_and_co_pdf(uploaded_file):
                     entry["Batch"] = f"Batch no. {batch}"
 
                 df = pd.DataFrame(entries)[["story", "sku_description", "COLOUR_SKU", "STYLE", "Batch", "barcode"]]
-                st.dataframe(df)
-
+                
+                st.success("✅ Done!")
                 st.subheader("Edit Before Download")
                 edited_df = st.data_editor(df)
 

@@ -41,6 +41,8 @@ def format_product_translations(product_name, translation_row):
         'RS': " Sastav materijala nalazi se na ušivenoj etiketi.",
     }
     
+    # Languages to completely exclude from output
+    exclude_languages = ['ES_CA', 'FR']  # Keep ES_CA excluded since we're combining it with ES
     
     for lang, value in translation_row.items():
         if lang in ['DEPARTMENT', 'PRODUCT_NAME'] or lang in exclude_languages:
@@ -54,7 +56,7 @@ def format_product_translations(product_name, translation_row):
                 base_text += '.'
             formatted_value = f"{base_text}{country_suffixes[lang]}"
         elif lang == 'ES':
-            # For ES, use ES translation and append ES_CA if available
+            # For ES, combine with ES_CA if available
             es_value = value.strip() if pd.notna(value) else ''
             es_ca_value = translation_row.get('ES_CA', '').strip() if pd.notna(translation_row.get('ES_CA')) else ''
             if es_value and es_ca_value:
@@ -64,7 +66,6 @@ def format_product_translations(product_name, translation_row):
             else:
                 formatted_value = product_name
         else:
-
             # For other languages, use the translation if available
             formatted_value = value if pd.notna(value) else product_name
             
@@ -124,7 +125,7 @@ def extract_data_from_pdf(file):
         return [{
             "COLLECTION": collection.group(1).split("-")[0].strip() if collection else "UNKNOWN",
             "COLOUR_SKU": f"{colour} • SKU {sku}",
-            "STYLE": f"STYLE {style.group()} • B/S26" if style else "STYLE UNKNOWN",
+            "STYLE": f"STYLE {style.group()} • S/S26" if style else "STYLE UNKNOWN",
             "Batch": f"Batch no. {batch}",
             "barcode": barcode
         } for sku, barcode in zip(skus, valid_barcodes)]
@@ -138,19 +139,30 @@ def extract_story(page1_text):
     return match.group(1).split("-")[0].strip() if match else "UNKNOWN"
 
 def extract_table_from_page2(page2_text):
-    entries = []
-    pattern = re.compile(r"(\d{6})\s+([A-Za-z\s\-]+?:\d+)\s+(\d{13})\s+\d+\s+\d+\s+(\d{4})\s+(\d{6})")
-    matches = pattern.findall(page2_text)
+    lines = [line.strip() for line in page2_text.splitlines() if line.strip()]
 
-    for match in matches:
-        sku, raw_desc, barcode, style, style_code = match
-        desc_clean = raw_desc.split(":")[0].strip()
-        entries.append({
-            "sku": sku,
-            "sku_description": desc_clean,
-            "barcode": barcode,
-            "style": style_code
-        })
+    # Skip header lines: Find first 6-digit SKU
+    data_start = next(i for i, line in enumerate(lines) if re.match(r"^\d{6}$", line))
+
+    # Now, every 11 lines = 1 product
+    entries = []
+    while data_start + 10 < len(lines):
+        sku = lines[data_start]
+        desc = lines[data_start + 1]
+        barcode = lines[data_start + 2]
+        style = lines[data_start + 6]
+
+        if re.match(r"^\d{6}$", sku) and re.match(r"^\d{13}$", barcode) and re.match(r"^\d{6}$", style):
+            clean_desc = desc.split(":")[0].strip()
+            entries.append({
+                "sku": sku,
+                "sku_description": clean_desc,
+                "barcode": barcode,
+                "style": style
+            })
+
+        data_start += 11  # move to next block
+
     return entries
 
 def process_pepco_pdf(uploaded_pdf):

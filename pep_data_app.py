@@ -61,8 +61,6 @@ def format_product_translations(product_name, translation_row):
             es_ca_value = translation_row.get('ES_CA', '').strip() if pd.notna(translation_row.get('ES_CA')) else ''
             if es_value and es_ca_value:
                 formatted_value = f"{es_value} / {es_ca_value}"
-            elif es_value:
-                formatted_value = es_value
             else:
                 formatted_value = product_name
         else:

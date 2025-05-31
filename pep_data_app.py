@@ -55,15 +55,24 @@ def format_product_translations(product_name, translation_row):
             if not base_text.endswith('.'):
                 base_text += '.'
             formatted_value = f"{base_text}{country_suffixes[lang]}"
-        elif lang == 'ES':
-            # For ES, use ES translation and append ES_CA if available
-            es_value = value.strip() if pd.notna(value) else ''
-            es_ca_value = translation_row.get('ES_CA', '').strip() if pd.notna(translation_row.get('ES_CA')) else ''
-            if es_value and es_ca_value:
-                formatted_value = f"{es_value} / {es_ca_value}"
-            else:
-                formatted_value = product_name
-        else:
+       def format_es(row):
+    es = row.get('ES', '').strip() if pd.notna(row.get('ES')) else ''
+    es_ca = row.get('ES_CA', '').strip() if pd.notna(row.get('ES_CA')) else ''
+    product_name = row.get('product_name', '')
+
+    if es and es_ca:
+        return f"{es} / {es_ca}"
+    elif es:
+        return es
+    else:
+        return product_name
+
+# নতুন ES কলাম তৈরি করো
+df['ES'] = df.apply(format_es, axis=1)
+
+# ES_CA বাদ দাও
+df.drop(columns=['ES_CA'], inplace=True)
+
             # For other languages, use the translation if available
             formatted_value = value if pd.notna(value) else product_name
             

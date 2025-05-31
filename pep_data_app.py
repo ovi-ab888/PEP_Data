@@ -21,30 +21,50 @@ PRICE_DATA = {
     'HUF': [12, 25, 35, 35, 45, 55, 60, 65, 75, 100, 120, 130, 150, 180, 200, 250, 300, 350, 400, 430, 450, 500, 600, 700, 800, 1000, 1200, 1500, 1600, 1700, 1800, 2000, 2300, 2500, 3000, 3500, 4000, 4500, 4800, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 25000]
 }
 
+import streamlit as st
+import pandas as pd
+
+# ========== PEPCO FUNCTIONS ==========
+
+# ✅ Google Sheet থেকে অনুবাদ লোড করার ফাংশন
+@st.cache_data(ttl=600)
+def load_product_translations():
+    sheet_id = "12QAe57IsVCa9-0D06tXYUUpfHbpRTsl2"
+    sheet_name = "Sheet1"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+    
+    try:
+        df = pd.read_csv(url)
+        return df
+    except Exception as e:
+        st.error(f"❌ Failed to load product translations: {str(e)}")
+        return pd.DataFrame()
+
+# ✅ অনুবাদ ফরম্যাট করার ফাংশন
 def format_product_translations(product_name, translation_row):
     formatted = []
-
-    # দেশভেদে অতিরিক্ত বাক্যাংশ
+    
+    # দেশভিত্তিক অতিরিক্ত টেক্সট
     country_suffixes = {
         'BiH': " Sastav materijala na ušivenoj etiketi.",
         'RS': " Sastav materijala nalazi se na ušivenoj etiketi.",
     }
 
-    # যেসব ভাষা একেবারে বাদ যাবে
-    exclude_languages = ['ES_CA', 'FR']
+    # এই ভাষাগুলো বাদ যাবে
+    exclude_languages = ['ES_CA', 'FR']  # 'FR' বাদ দিয়েছো, এবং 'ES_CA' কে ES এর সাথে মিশানো হবে
 
     for lang, value in translation_row.items():
         if lang in ['DEPARTMENT', 'PRODUCT_NAME'] or lang in exclude_languages:
             continue
 
-        # BiH আর RS এর জন্য
+        # 🇧🇦 BiH ও 🇷🇸 RS: অতিরিক্ত suffix সহ
         if lang in country_suffixes:
-            base_text = value if pd.notna(value) and str(value).strip() != '' else product_name
-            if not str(base_text).endswith('.'):
+            base_text = value if pd.notna(value) else product_name
+            if not base_text.endswith('.'):
                 base_text += '.'
             formatted_value = f"{base_text}{country_suffixes[lang]}"
-
-        # Spanish এর জন্য - ES + ES_CA combine
+        
+        # 🇪🇸 Spanish + Catalan
         elif lang == 'ES':
             es_value = value.strip() if pd.notna(value) else ''
             es_ca_value = translation_row.get('ES_CA', '').strip() if pd.notna(translation_row.get('ES_CA')) else ''
@@ -55,12 +75,12 @@ def format_product_translations(product_name, translation_row):
             else:
                 formatted_value = product_name
 
-        # বাকি সব ভাষা
+        # অন্যান্য ভাষা
         else:
-            formatted_value = value if pd.notna(value) and str(value).strip() != '' else product_name
+            formatted_value = value if pd.notna(value) else product_name
 
         formatted.append(f"|{lang}| {formatted_value}")
-
+    
     return " ".join(formatted)
 
 

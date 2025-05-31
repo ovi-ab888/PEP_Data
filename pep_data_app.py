@@ -54,7 +54,7 @@ def format_product_translations(product_name, translation_row):
                 base_text += '.'
             formatted_value = f"{base_text}{country_suffixes[lang]}"
         elif lang == 'ES':
-        # For ES, use ES translation and append ES_CA if available
+            # For ES, use ES translation and append ES_CA if available
             es_value = value.strip() if pd.notna(value) else ''
             es_ca_value = translation_row.get('ES_CA', '').strip() if pd.notna(translation_row.get('ES_CA')) else ''
             if es_value and es_ca_value:

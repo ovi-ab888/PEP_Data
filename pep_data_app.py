@@ -125,7 +125,7 @@ def extract_data_from_pdf(file):
         return [{
             "COLLECTION": collection.group(1).split("-")[0].strip() if collection else "UNKNOWN",
             "COLOUR_SKU": f"{colour} • SKU {sku}",
-            "STYLE": f"STYLE {style.group()} • S/S26" if style else "STYLE UNKNOWN",
+            "STYLE": f"STYLE {style.group()} • B/S26" if style else "STYLE UNKNOWN",
             "Batch": f"Batch no. {batch}",
             "barcode": barcode
         } for sku, barcode in zip(skus, valid_barcodes)]

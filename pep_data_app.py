@@ -241,10 +241,12 @@ def process_pep_and_co_pdf(uploaded_file):
 
         colour = st.text_input("Enter Colour:")
         batch = st.text_input("Enter Batch No:")
+        sku_description_input = st.text_input("Enter SKU Description (used for all SKUs):")
 
-        if colour and batch:
+        if colour and batch and sku_description_input:
             if entries:
                 for entry in entries:
+                    entry["sku_description"] = sku_description_input
                     entry["story"] = story
                     entry["COLOUR_SKU"] = f"{colour} • SKU {entry['sku']}"
                     entry["STYLE"] = f"STYLE {entry['style']} • H/W26"
@@ -268,6 +270,7 @@ def process_pep_and_co_pdf(uploaded_file):
                     file_name=f"{os.path.splitext(uploaded_file.name)[0]}.csv",
                     mime="text/csv"
                 )
+
 
 # ========== MAIN APP ==========
 st.title("PEPCO/PEP&CO Data Processor")

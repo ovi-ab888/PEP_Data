@@ -241,7 +241,7 @@ def process_pep_and_co_pdf(uploaded_file):
 
         colour = st.text_input("Enter Colour:")
         batch = st.text_input("Enter Batch No:")
-        sku_description_input = st.text_input("Enter SKU Description (used for all SKUs):")
+        sku_description_input = st.text_input("Enter Description:")
 
         if colour and batch and sku_description_input:
             if entries:

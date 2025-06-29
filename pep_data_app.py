@@ -115,7 +115,7 @@ def extract_data_from_pdf(file):
         if len(doc) < 3:
             st.error("PDF must have at least 3 pages.")
             return None
-            
+
         page1 = doc[0].get_text()
         style = re.search(r"\b\d{6}\b", page1)
         collection = re.search(r"Collection\s*\.{2,}\s*(.+)", page1)
@@ -126,23 +126,41 @@ def extract_data_from_pdf(file):
                 batch = (datetime.strptime(date_match.group(1), "%d/%m/%Y") - timedelta(days=20)).strftime("%m%Y")
             except:
                 pass
+
+        order_id = re.search(r"Order\s*-\s*ID\s*\.{2,}\s*(.+)", page1)
+        item_class = re.search(r"Item classification\s*\.{2,}\s*(.+)", page1)
+        supplier_code = re.search(r"Supplier product code\s*\.{2,}\s*(.+)", page1)
+        supplier_name = re.search(r"Supplier name\s*\.{2,}\s*(.+)", page1)
+
         colour = extract_colour_from_page2(doc[1].get_text())
         page3 = doc[2].get_text()
         skus = re.findall(r"\b\d{8}\b", page3)
         all_barcodes = re.findall(r"\b\d{13}\b", page3)
         excluded = set(re.findall(r"barcode:\s*(\d{13});", page3))
         valid_barcodes = [b for b in all_barcodes if b not in excluded]
-        
-        return [{
+
+        result = [{
+            "Order_ID": order_id.group(1).strip() if order_id else "UNKNOWN",
+            "STYLE_CODE": style.group() if style else "UNKNOWN",
+            "COLOUR": colour,
+            "Supplier_product_code": supplier_code.group(1).strip() if supplier_code else "UNKNOWN",
+            "Item_classification": item_class.group(1).strip() if item_class else "UNKNOWN",
+            "Supplier_name": supplier_name.group(1).strip() if supplier_name else "UNKNOWN",
+            "today_date": datetime.today().strftime('%d/%m/%Y'),
             "COLLECTION": collection.group(1).split("-")[0].strip() if collection else "UNKNOWN",
             "COLOUR_SKU": f"{colour} • SKU {sku}",
             "STYLE": f"STYLE {style.group()} • B/S26" if style else "STYLE UNKNOWN",
             "Batch": f"Batch no. {batch}",
             "barcode": barcode
         } for sku, barcode in zip(skus, valid_barcodes)]
+
+        return result
+
     except Exception as e:
         st.error(f"PDF error: {str(e)}")
         return None
+
+
 
 # ========== PEP&CO FUNCTIONS ==========
 def extract_story(page1_text):
@@ -206,9 +224,11 @@ def process_pepco_pdf(uploaded_pdf):
                         df[cur] = currency_values.get(cur, "")
                     df['PLN'] = format_number(pln_price, 'PLN')
 
-                    final_cols = ['COLLECTION', 'COLOUR_SKU', 'STYLE', 'Batch', 'barcode',
-                                  'EUR', 'BGN', 'BAM', 'RON', 'PLN', 'CZK', 'RSD', 'HUF', 'product_name']
-                    df = df[final_cols]
+                    final_cols = [
+    "Order_ID", "STYLE_CODE", "COLOUR", "Supplier_product_code", "Item_classification", "Supplier_name",
+    "today_date", "COLLECTION", "COLOUR_SKU", "STYLE", "Batch", "barcode",
+    "EUR", "BGN", "BAM", "PLN", "RON", "CZK", "RSD", "HUF", "product_name"
+]
 
                     st.success("✅ Done!")
                     st.subheader("Edit Before Download")

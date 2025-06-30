@@ -146,7 +146,7 @@ def extract_data_from_pdf(file):
             "Supplier_product_code": supplier_code.group(1).strip() if supplier_code else "UNKNOWN",
             "Item_classification": item_class.group(1).strip() if item_class else "UNKNOWN",
             "Supplier_name": supplier_name.group(1).strip() if supplier_name else "UNKNOWN",
-            "today_date": datetime.today().strftime('%d/%m/%Y'),
+            "today_date": datetime.today().strftime('%d-%m-%Y'),
             "COLLECTION": collection.group(1).split("-")[0].strip() if collection else "UNKNOWN",
             "COLOUR_SKU": f"{colour} • SKU {sku}",
             "STYLE": f"STYLE {style.group()} • B/S26" if style else "STYLE UNKNOWN",

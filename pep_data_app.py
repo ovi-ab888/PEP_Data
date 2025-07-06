@@ -328,7 +328,7 @@ def process_pep_and_co_pdf(uploaded_file):
     ]
     selected_group = st.selectbox("Select Group/Department", options=group_options)
 
-    batch_options = ["Order Number", "20 days before Handover Date"]
+    batch_options = ["Order Number", "Handover Date"]
     batch_choice = st.selectbox("Select Batch Source", options=batch_options)
 
     if colour and sku_description_input:

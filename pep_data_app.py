@@ -314,16 +314,14 @@ def process_pep_and_co_pdf(uploaded_file):
     sku_description_input = st.text_input("Enter Description:")
 
     group_options = [
-        "BABYWEAR / BABYCLOTHING",
+        "KIDSWEAR / BABY CLOTHING",
         "KIDSWEAR / KIDS CLOTHING",
-        "OLDERWEAR / OLDER CLOTHING",
         "MENSWEAR / MENS CLOTHING",
         "WOMENSWEAR / WOMENS CLOTHING",
-        "BABYessentialsWEAR / BABYCLOTHING",
-        "KIDSessentialsWEAR / KIDS CLOTHING",
-        "OLDERessentialsWEAR / OLDER CLOTHING",
-        "MENSessentialsWEAR / MENS CLOTHING",
-        "WOMENSessentialsWEAR / WOMENS CLOTHING"
+        "KIDSWEAR / BABY ESSENTIALS",
+        "KIDSWEAR / KIDS ESSENTIALS",
+        "MENSWEAR / MENS ESSENTIALS",
+        "WOMENSWEAR / WOMENS ESSENTIALS"
     ]
     selected_group = st.selectbox("Select Group/Department", options=group_options)
 

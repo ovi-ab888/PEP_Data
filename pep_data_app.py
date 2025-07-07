@@ -323,7 +323,7 @@ def process_pep_and_co_pdf(uploaded_file):
         "MENSWEAR / MENS ESSENTIALS",
         "WOMENSWEAR / WOMENS ESSENTIALS"
     ]
-    selected_group = st.selectbox("Select Group/Department", options=group_options)
+    selected_group = st.selectbox("Select Department", options=group_options)
 
     batch_options = ["Order Number", "Handover Date"]
     batch_choice = st.selectbox("Select Batch Source", options=batch_options)
@@ -335,7 +335,9 @@ def process_pep_and_co_pdf(uploaded_file):
                 entry["story"] = story
                 entry["COLOUR_SKU"] = f"{colour} • SKU {entry['sku']}"
                 entry["STYLE"] = f"STYLE {entry['style']} • H/W26"
+                entry["STYLE_code"] = entry['style']  # শুধুমাত্র STYLE code (যেমন: 123456)
                 entry["today_date"] = datetime.today().strftime('%d/%m/%Y')
+                entry["colour"] = colour
 
                 if batch_choice == "Order Number":
                     entry["Batch"] = f"Batch no. {details['Order Number']}"
@@ -352,13 +354,14 @@ def process_pep_and_co_pdf(uploaded_file):
                     "Supplier name": details["Supplier name"],
                     "Pack SKU": details["Pack SKU"],
                     "Pack Barcode": details["Pack Barcode"],
-                    "Group/Department": selected_group
+                    "Department": selected_group
                 })
 
             df = pd.DataFrame(entries)[[
                 "Order Number", "Supplier name", "today_date",
-                "Pack SKU", "Pack Barcode", "Group/Department",
-                "story", "sku_description", "COLOUR_SKU", "STYLE", "Batch", "barcode"
+                "Pack SKU", "Pack Barcode", "Department",
+                "story", "sku_description", "COLOUR_SKU", "STYLE", "STYLE_code", "Batch", "barcode",
+                "colour"
             ]]
 
             st.success("\u2705 Done!")
@@ -377,7 +380,6 @@ def process_pep_and_co_pdf(uploaded_file):
                 file_name=f"{os.path.splitext(uploaded_file.name)[0]}.csv",
                 mime="text/csv"
             )
-
 
 # ========== MAIN APP ==========
 st.title("PEPCO/PEP&CO Data Processor")

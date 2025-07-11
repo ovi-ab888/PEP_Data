@@ -116,7 +116,22 @@ def extract_data_from_pdf(file):
             return None
 
         page1 = doc[0].get_text()
-        style = re.search(r"\b\d{6}\b", page1)
+        
+        # Extract Merch code (with slashes) and Season
+        merch_code = re.search(r"Merch\s*code\s*\.{2,}\s*([\w/]+)", page1)
+        season = re.search(r"Season\s*\.{2,}\s*(\w+)?\s*(\d{2})", page1)  # Capture last 2 digits of season
+        
+        # Format the STYLE part
+        style_code = re.search(r"\b\d{6}\b", page1)
+        style_suffix = ""
+        
+        if merch_code and season:
+            merch_value = merch_code.group(1).strip()
+            season_digits = season.group(2)
+            style_suffix = f"{merch_value}{season_digits}"
+        elif merch_code:
+            style_suffix = merch_code.group(1).strip()
+
         collection = re.search(r"Collection\s*\.{2,}\s*(.+)", page1)
         date_match = re.search(r"Handover\s*date\s*\.{2,}\s*(\d{2}/\d{2}/\d{4})", page1)
         batch = "UNKNOWN"
@@ -140,7 +155,7 @@ def extract_data_from_pdf(file):
 
         result = [{
             "Order_ID": order_id.group(1).strip() if order_id else "UNKNOWN",
-            "STYLE_CODE": style.group() if style else "UNKNOWN",
+            "STYLE_CODE": style_code.group() if style_code else "UNKNOWN",
             "COLOUR": colour,
             "Supplier_product_code": supplier_code.group(1).strip() if supplier_code else "UNKNOWN",
             "Item_classification": item_class.group(1).strip() if item_class else "UNKNOWN",
@@ -148,7 +163,7 @@ def extract_data_from_pdf(file):
             "today_date": datetime.today().strftime('%d-%m-%Y'),
             "COLLECTION": collection.group(1).split("-")[0].strip() if collection else "UNKNOWN",
             "COLOUR_SKU": f"{colour} • SKU {sku}",
-            "STYLE": f"STYLE {style.group()} • B/S26" if style else "STYLE UNKNOWN",
+            "STYLE": f"STYLE {style_code.group()} • {style_suffix}" if style_code else "STYLE UNKNOWN",
             "Batch": f"Batch no. {batch}",
             "barcode": barcode
         } for sku, barcode in zip(skus, valid_barcodes)]

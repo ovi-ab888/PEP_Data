@@ -97,16 +97,44 @@ def find_closest_price(pln_value):
     except (ValueError, TypeError):
         return None
 
-def extract_colour_from_page2(text):
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-    skip_keywords = ["PURCHASE", "COLOUR", "TOTAL", "PANTONE", "SUPPLIER", "PRICE", "ORDERED", "SIZES", "TPG", "TPX", "USD", "PEPCO", "Poland", "ul. Strzeszyńska 73A, 60-479 Poznań", "NIP 782-21-31-157"]
-    filtered_lines = [
-        line for line in lines
-        if all(keyword.lower() not in line.lower() for keyword in skip_keywords)
-        and not re.match(r"^[\d\s,./-]+$", line)
-    ]
-    colour = filtered_lines[0] if filtered_lines else "UNKNOWN"
-    return re.sub(r'\d+', '', colour).strip().upper()
+def extract_colour_from_page2(text, page_number=1):
+    try:
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        skip_keywords = ["PURCHASE", "COLOUR", "TOTAL", "PANTONE", "SUPPLIER", 
+                        "PRICE", "ORDERED", "SIZES", "TPG", "TPX", "USD", 
+                        "PEPCO", "Poland", "ul. Strzeszyńska 73A, 60-479 Poznań", 
+                        "NIP 782-21-31-157"]
+        
+        filtered_lines = [
+            line for line in lines
+            if all(keyword.lower() not in line.lower() for keyword in skip_keywords)
+            and not re.match(r"^[\d\s,./-]+$", line)
+        ]
+        
+        colour = "UNKNOWN"
+        if filtered_lines:
+            colour = filtered_lines[0]
+            # Remove numbers and special characters
+            colour = re.sub(r'[\d\.\)\(]+', '', colour).strip().upper()
+            
+            # Check if colour contains "MANUAL"
+            if "MANUAL" in colour:
+                st.warning(f"⚠️ Page {page_number}: 'MANUAL' detected in colour field")
+                manual_colour = st.text_input(f"Enter Colour (Page {page_number}):", 
+                                            key=f"colour_{page_number}")
+                return manual_colour.upper() if manual_colour else "UNKNOWN"
+            
+            return colour if colour else "UNKNOWN"
+        
+        # If no colour found at all
+        st.warning(f"⚠️ Page {page_number}: Colour information not found in PDF")
+        manual_colour = st.text_input(f"Enter Colour (Page {page_number}):", 
+                                    key=f"colour_{page_number}")
+        return manual_colour.upper() if manual_colour else "UNKNOWN"
+        
+    except Exception as e:
+        st.error(f"Error extracting colour: {str(e)}")
+        return "UNKNOWN"
 
 def extract_data_from_pdf(file):
     try:

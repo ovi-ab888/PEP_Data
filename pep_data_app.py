@@ -276,6 +276,7 @@ def process_pepco_pdf(uploaded_pdf):
                     )
 
 # ========== PEP&CO FUNCTIONS ==========
+
 def extract_story(page1_text):
     match = re.search(r"Story\s+(.+)", page1_text)
     return match.group(1).split("-")[0].strip() if match else "UNKNOWN"
@@ -450,6 +451,9 @@ def process_pep_and_co_pdf(uploaded_file):
                     mime="text/csv"
                 )
                 
+    except Exception as e:
+        st.error(f"❌ An error occurred: {str(e)}")
+        return None
 
 # ========== MAIN APP ==========
 def main():

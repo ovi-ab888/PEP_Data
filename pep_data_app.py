@@ -416,6 +416,9 @@ def process_pep_and_co_pdf(uploaded_file):
                         except:
                             batch_info = "Batch no. UNKNOWN"
 
+                    # Add the new sku_description_2 field with (Ratio Packs)
+                    sku_description_2 = f"{sku_description_input} (Ratio Packs)"
+
                     processed_data.append({
                         "Order_Number": details.get("Order_Number", "UNKNOWN"),
                         "Supplier_name": details.get("Supplier_name", "UNKNOWN"),
@@ -425,6 +428,7 @@ def process_pep_and_co_pdf(uploaded_file):
                         "Department": selected_group,
                         "story": story,
                         "sku_description": sku_description_input,
+                        "sku_description_2": sku_description_2,  # New field added
                         "COLOUR_SKU": f"{colour} • SKU {entry['sku']}",
                         "STYLE": f"STYLE {entry['style']} • H/W26",
                         "STYLE_code": entry['style'],
@@ -436,7 +440,8 @@ def process_pep_and_co_pdf(uploaded_file):
                 processed_df = pd.DataFrame(processed_data)[[
                     "Order_Number", "Supplier_name", "today_date",
                     "Pack_SKU", "Pack_Barcode", "Department",
-                    "story", "sku_description", "COLOUR_SKU", "STYLE", "STYLE_code", 
+                    "story", "sku_description", "sku_description_2",  # Include new field
+                    "COLOUR_SKU", "STYLE", "STYLE_code", 
                     "Batch", "barcode", "colour"
                 ]]
 
@@ -459,6 +464,7 @@ def process_pep_and_co_pdf(uploaded_file):
     except Exception as e:
         st.error(f"❌ An error occurred: {str(e)}")
         return None
+
 
 # ========== MAIN APP ==========
 def main():

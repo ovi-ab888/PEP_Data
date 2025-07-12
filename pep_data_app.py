@@ -283,50 +283,26 @@ def extract_story(page1_text):
 def extract_pack_details(text):
     details = {}
     order = re.search(r"Order Number\s+(\d+)", text)
-    details["Order_Number"] = order.group(1).strip() if order else "UNKNOWN"
+    details["Order_Number"] = order.group(1).strip() if order else "UNKNOWN"  # Changed to underscore
 
     supplier = re.search(r"Supplier name\s+([^\n]+)", text)
     details["Supplier_name"] = supplier.group(1).strip() if supplier else "UNKNOWN"
 
     handover = re.search(r"Handover Date\s+(\d{4}-\d{2}-\d{2})", text)
-    details["_handover_date"] = handover.group(1) if handover else None
+    details["Handover_Date"] = handover.group(1) if handover else None  # Changed key name
 
     sku_match = re.search(r"\b(\d{6})\b", text)
-    details["Pack_SKU"] = sku_match.group(1) if sku_match else "UNKNOWN"
+    details["Pack_SKU"] = sku_match.group(1) if sku_match else "UNKNOWN"  # Consistent naming
 
     barcode_match = re.search(r"\b(\d{13})\b", text)
     details["Pack_Barcode"] = barcode_match.group(1) if barcode_match else "UNKNOWN"
 
     return details
 
-def extract_table_from_page2(page2_text):
-    lines = [line.strip() for line in page2_text.splitlines() if line.strip()]
-    data_start = next(i for i, line in enumerate(lines) if re.match(r"^\d{6}$", line))
-
-    entries = []
-    while data_start + 10 < len(lines):
-        sku = lines[data_start]
-        desc = lines[data_start + 1]
-        barcode = lines[data_start + 2]
-        style = lines[data_start + 6]
-
-        if re.match(r"^\d{6}$", sku) and re.match(r"^\d{13}$", barcode) and re.match(r"^\d{6}$", style):
-            clean_desc = desc.split(":")[0].strip()
-            entries.append({
-                "sku": sku,
-                "sku_description": clean_desc,
-                "barcode": barcode,
-                "style": style
-            })
-
-        data_start += 11
-
-    return entries
-
 def process_pep_and_co_pdf(uploaded_file):
     doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
     if len(doc) < 2:
-        st.error("\u274c PDF must have at least 2 pages.")
+        st.error("❌ PDF must have at least 2 pages.")
         return
 
     story_text = doc[0].get_text()
@@ -339,82 +315,75 @@ def process_pep_and_co_pdf(uploaded_file):
     colour = st.text_input("Enter Colour:", key="pepandco_colour")
     sku_description_input = st.text_input("Enter Description:", key="pepandco_description")
 
+    if not colour or not sku_description_input:
+        st.warning("⚠️ Please enter both colour and description")
+        return
+
     group_options = [
         "KIDSWEAR / BABY CLOTHING",
         "KIDSWEAR / KIDS CLOTHING",
-        "MENSWEAR / MENS CLOTHING",
+        "MENSWEAR / MENS CLOTHING", 
         "WOMENSWEAR / WOMENS CLOTHING",
         "KIDSWEAR / BABY ESSENTIALS",
         "KIDSWEAR / KIDS ESSENTIALS",
         "MENSWEAR / MENS ESSENTIALS",
         "WOMENSWEAR / WOMENS ESSENTIALS"
     ]
-    selected_group = st.selectbox(
-        "Select Department", 
-        options=group_options,
-        key="pepandco_department"
-    )
+    selected_group = st.selectbox("Select Department", options=group_options)
 
     batch_options = ["Order Number", "Handover Date"]
-    batch_choice = st.selectbox(
-        "Select Batch Source", 
-        options=batch_options,
-        key="pepandco_batch_source"
+    batch_choice = st.selectbox("Select Batch Source", options=batch_options)
+
+    if not entries:
+        st.error("❌ No valid entries found in the PDF")
+        return
+
+    processed_data = []
+    for entry in entries:
+        new_entry = {
+            "Order_Number": details.get("Order_Number", "UNKNOWN"),
+            "Supplier_name": details.get("Supplier_name", "UNKNOWN"),
+            "today_date": datetime.today().strftime('%d/%m/%Y'),
+            "Pack_SKU": details.get("Pack_SKU", "UNKNOWN"),
+            "Pack_Barcode": details.get("Pack_Barcode", "UNKNOWN"),
+            "Department": selected_group,
+            "story": story,
+            "sku_description": sku_description_input,
+            "COLOUR_SKU": f"{colour} • SKU {entry['sku']}",
+            "STYLE": f"STYLE {entry['style']} • H/W26",
+            "STYLE_code": entry['style'],
+            "Batch": (f"Batch no. {details['Order_Number']}" if batch_choice == "Order Number" 
+                     else (f"Batch no. {(datetime.strptime(details['Handover_Date'], '%Y-%m-%d') - timedelta(days=20)).strftime('%m%Y')}" 
+                            if details.get('Handover_Date') else "Batch no. UNKNOWN")),
+            "barcode": entry['barcode'],
+            "colour": colour
+        }
+        processed_data.append(new_entry)
+
+    df = pd.DataFrame(processed_data)
+    
+    # Reorder columns for better presentation
+    final_columns = [
+        "Order_Number", "Supplier_name", "today_date", "Pack_SKU", "Pack_Barcode",
+        "Department", "story", "sku_description", "COLOUR_SKU", "STYLE", "STYLE_code",
+        "Batch", "barcode", "colour"
+    ]
+    df = df[final_columns]
+
+    st.success("✅ Processing complete!")
+    st.subheader("Edit Before Download")
+    
+    edited_df = st.data_editor(df)
+    
+    csv_buffer = StringIO()
+    edited_df.to_csv(csv_buffer, sep=';', quoting=csv.QUOTE_ALL, index=False)
+    
+    st.download_button(
+        "📥 Download CSV",
+        csv_buffer.getvalue().encode('utf-8-sig'),
+        file_name=f"pepco_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv"
     )
-
-    if colour and sku_description_input:
-        if entries:
-            for i, entry in enumerate(entries):
-                entry["sku_description"] = sku_description_input
-                entry["story"] = story
-                entry["COLOUR_SKU"] = f"{colour} • SKU {entry['sku']}"
-                entry["STYLE"] = f"STYLE {entry['style']} • H/W26"
-                entry["STYLE_code"] = entry['style']
-                entry["today_date"] = datetime.today().strftime('%d/%m/%Y')
-                entry["colour"] = colour
-
-                if batch_choice == "Order Number":
-                    entry["Batch"] = f"Batch no. {details['Order Number']}"
-                else:
-                    try:
-                        handover_date = datetime.strptime(details["_handover_date"], "%Y-%m-%d")
-                        batch_date = handover_date - timedelta(days=20)
-                        entry["Batch"] = f"Batch no. {batch_date.strftime('%m%Y')}"
-                    except:
-                        entry["Batch"] = "Batch no. UNKNOWN"
-
-                entry.update({
-                    "Order_Number": details["Order Number"],
-                    "Supplier_name": details["Supplier name"],
-                    "Pack_SKU": details["Pack SKU"],
-                    "Pack_Barcode": details["Pack Barcode"],
-                    "Department": selected_group
-                })
-
-            df = pd.DataFrame(entries)[[
-                "Order_Number", "Supplier_name", "today_date",
-                "Pack_SKU", "Pack_Barcode", "Department",
-                "story", "sku_description", "COLOUR_SKU", "STYLE", "STYLE_code", "Batch", "barcode",
-                "colour"
-            ]]
-
-            st.success("\u2705 Done!")
-            st.subheader("Edit Before Download")
-            edited_df = st.data_editor(df)
-
-            csv_buffer = StringIO()
-            writer = pycsv.writer(csv_buffer, delimiter=';', quoting=pycsv.QUOTE_ALL)
-            writer.writerow(edited_df.columns)
-            for row in edited_df.itertuples(index=False):
-                writer.writerow(row)
-
-            st.download_button(
-                "📩 Download CSV",
-                csv_buffer.getvalue().encode('utf-8-sig'),
-                file_name=f"{os.path.splitext(uploaded_file.name)[0]}.csv",
-                mime="text/csv",
-                key="pepandco_download"
-            )
 
 # ========== MAIN APP ==========
 def main():

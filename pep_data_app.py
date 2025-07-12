@@ -99,37 +99,20 @@ def find_closest_price(pln_value):
 
 def extract_colour_from_page2(text, page_number=1):
     try:
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        skip_keywords = ["PURCHASE", "COLOUR", "TOTAL", "PANTONE", "SUPPLIER", 
-                        "PRICE", "ORDERED", "SIZES", "TPG", "TPX", "USD", 
-                        "PEPCO", "Poland", "ul. Strzeszyńska 73A, 60-479 Poznań", 
-                        "NIP 782-21-31-157"]
+        # ... existing code ...
         
-        filtered_lines = [
-            line for line in lines
-            if all(keyword.lower() not in line.lower() for keyword in skip_keywords)
-            and not re.match(r"^[\d\s,./-]+$", line)
-        ]
-        
-        colour = "UNKNOWN"
-        if filtered_lines:
-            colour = filtered_lines[0]
-            # Remove numbers and special characters
-            colour = re.sub(r'[\d\.\)\(]+', '', colour).strip().upper()
-            
-            # Check if colour contains "MANUAL"
-            if "MANUAL" in colour:
-                st.warning(f"⚠️ Page {page_number}: 'MANUAL' detected in colour field")
-                manual_colour = st.text_input(f"Enter Colour (Page {page_number}):", 
-                                            key=f"colour_{page_number}")
-                return manual_colour.upper() if manual_colour else "UNKNOWN"
-            
-            return colour if colour else "UNKNOWN"
+        if "MANUAL" in colour:
+            manual_colour = st.text_input(
+                f"Enter Colour (Page {page_number}):",
+                key=f"manual_colour_{page_number}"
+            )
+            return manual_colour.upper() if manual_colour else "UNKNOWN"
         
         # If no colour found at all
-        st.warning(f"⚠️ Page {page_number}: Colour information not found in PDF")
-        manual_colour = st.text_input(f"Enter Colour (Page {page_number}):", 
-                                    key=f"colour_{page_number}")
+        manual_colour = st.text_input(
+            f"Enter Colour (Page {page_number}):",
+            key=f"missing_colour_{page_number}"
+        )
         return manual_colour.upper() if manual_colour else "UNKNOWN"
         
     except Exception as e:
@@ -238,16 +221,23 @@ def process_pepco_pdf(uploaded_pdf):
     translations_df = load_product_translations()
     
     if uploaded_pdf and not translations_df.empty:
-        # First extract data from PDF
         result_data = extract_data_from_pdf(uploaded_pdf)
         
-        if result_data:  # Only proceed if we successfully extracted data
+        if result_data:
             depts = translations_df['DEPARTMENT'].dropna().unique().tolist()
-            selected_dept = st.selectbox("Select Department", options=depts)
+            selected_dept = st.selectbox(
+                "Select Department",
+                options=depts,
+                key="pepco_dept_select"
+            )
 
             filtered = translations_df[translations_df['DEPARTMENT'] == selected_dept]
             products = filtered['PRODUCT_NAME'].dropna().unique().tolist()
-            product_type = st.selectbox("Select Product Type", options=products)
+            product_type = st.selectbox(
+                "Select Product Type",
+                options=products,
+                key="pepco_product_select"
+            )
 
             df = pd.DataFrame(result_data)
             product_row = filtered[filtered['PRODUCT_NAME'] == product_type]
@@ -256,13 +246,13 @@ def process_pepco_pdf(uploaded_pdf):
             else:
                 df['product_name'] = ""
 
-            pln_price = st.number_input("Enter PLN Price", min_value=0.0, step=0.01, format="%.2f")
-            if pln_price:
-                currency_values = find_closest_price(pln_price)
-                if currency_values:
-                    for cur in ['EUR', 'BGN', 'BAM', 'RON', 'CZK', 'RSD', 'HUF']:
-                        df[cur] = currency_values.get(cur, "")
-                    df['PLN'] = format_number(pln_price, 'PLN')
+            pln_price = st.number_input(
+                "Enter PLN Price",
+                min_value=0.0,
+                step=0.01,
+                format="%.2f",
+                key="pepco_pln_price"
+            )
 
                     final_cols = [
     "Order_ID", "STYLE_CODE", "COLOUR", "Supplier_product_code", "Item_classification", "Supplier_name",
@@ -1693,45 +1683,47 @@ def process_pep_and_co_pdf(uploaded_file):
             )
 
 # ========== MAIN APP ==========
-# ========== MAIN APP ==========
 def main():
     st.title("PEPCO/PEP&CO Data Processor")
 
-    # Use a session state to track brand selection
-    if 'brand' not in st.session_state:
-        st.session_state.brand = "PEPCO"
+    # Initialize session state for brand selection
+    if 'selected_brand' not in st.session_state:
+        st.session_state.selected_brand = "PEPCO"
 
-    # Radio button with unique key
-    brand = st.radio(
-        "Select Brand", 
-        ("PEPCO", "PEP&CO"), 
-        key="brand_selector_radio",
-        index=0 if st.session_state.brand == "PEPCO" else 1
-    )
-    
-    # Update session state
-    st.session_state.brand = brand
+    # Create a container for the radio buttons
+    with st.container():
+        brand = st.radio(
+            "Select Brand",
+            ("PEPCO", "PEP&CO"),
+            key="main_brand_selector",
+            index=0 if st.session_state.selected_brand == "PEPCO" else 1
+        )
+        st.session_state.selected_brand = brand
 
     if brand == "PEPCO":
-        st.subheader("PEPCO Data Processing")
-        uploaded_pdf = st.file_uploader(
-            "Upload PEPCO Data file", 
-            type=["pdf"], 
-            key="pepco_file_uploader"
-        )
-        if uploaded_pdf:
-            process_pepco_pdf(uploaded_pdf)
+        pepco_section()
     else:
-        st.subheader("PEP&CO Data Processing")
-        uploaded_file = st.file_uploader(
-            "Upload PEP&CO PDF", 
-            type="pdf", 
-            key="pepandco_file_uploader"
-        )
-        if uploaded_file:
-            process_pep_and_co_pdf(uploaded_file)
+        pepandco_section()
+
+def pepco_section():
+    st.subheader("PEPCO Data Processing")
+    uploaded_pdf = st.file_uploader(
+        "Upload PEPCO Data file",
+        type=["pdf"],
+        key="pepco_unique_uploader"
+    )
+    if uploaded_pdf:
+        process_pepco_pdf(uploaded_pdf)
+
+def pepandco_section():
+    st.subheader("PEP&CO Data Processing")
+    uploaded_file = st.file_uploader(
+        "Upload PEP&CO PDF",
+        type="pdf",
+        key="pepandco_unique_uploader"
+    )
+    if uploaded_file:
+        process_pep_and_co_pdf(uploaded_file)
 
 if __name__ == "__main__":
     main()
-st.markdown("---")
-st.caption("This app developed by Ovi")

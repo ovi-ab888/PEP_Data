@@ -392,8 +392,8 @@ def process_pep_and_co_pdf(uploaded_file):
                 })
 
             df = pd.DataFrame(entries)[[
-                "Order Number", "Supplier name", "today_date",
-                "Pack SKU", "Pack Barcode", "Department",
+                "Order_Number", "Supplier_name", "today_date",
+                "Pack_SKU", "Pack_Barcode", "Department",
                 "story", "sku_description", "COLOUR_SKU", "STYLE", "STYLE_code", "Batch", "barcode",
                 "colour"
             ]]

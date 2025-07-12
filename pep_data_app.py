@@ -283,19 +283,19 @@ def extract_story(page1_text):
 def extract_pack_details(text):
     details = {}
     order = re.search(r"Order Number\s+(\d+)", text)
-    details["Order Number"] = order.group(1).strip() if order else "UNKNOWN"
+    details["Order_Number"] = order.group(1).strip() if order else "UNKNOWN"
 
     supplier = re.search(r"Supplier name\s+([^\n]+)", text)
-    details["Supplier name"] = supplier.group(1).strip() if supplier else "UNKNOWN"
+    details["Supplier_name"] = supplier.group(1).strip() if supplier else "UNKNOWN"
 
     handover = re.search(r"Handover Date\s+(\d{4}-\d{2}-\d{2})", text)
     details["_handover_date"] = handover.group(1) if handover else None
 
     sku_match = re.search(r"\b(\d{6})\b", text)
-    details["Pack SKU"] = sku_match.group(1) if sku_match else "UNKNOWN"
+    details["Pack_SKU"] = sku_match.group(1) if sku_match else "UNKNOWN"
 
     barcode_match = re.search(r"\b(\d{13})\b", text)
-    details["Pack Barcode"] = barcode_match.group(1) if barcode_match else "UNKNOWN"
+    details["Pack_Barcode"] = barcode_match.group(1) if barcode_match else "UNKNOWN"
 
     return details
 
@@ -384,10 +384,10 @@ def process_pep_and_co_pdf(uploaded_file):
                         entry["Batch"] = "Batch no. UNKNOWN"
 
                 entry.update({
-                    "Order Number": details["Order Number"],
-                    "Supplier name": details["Supplier name"],
-                    "Pack SKU": details["Pack SKU"],
-                    "Pack Barcode": details["Pack Barcode"],
+                    "Order_Number": details["Order Number"],
+                    "Supplier_name": details["Supplier name"],
+                    "Pack_SKU": details["Pack SKU"],
+                    "Pack_Barcode": details["Pack Barcode"],
                     "Department": selected_group
                 })
 

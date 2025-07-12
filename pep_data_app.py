@@ -310,7 +310,56 @@ def process_pep_and_co_pdf(uploaded_file):
 
     story = extract_story(story_text)
     details = extract_pack_details(story_text)
-    entries = extract_table_from_page2(page2_text)
+    def extract_table_from_page2(page2_text):
+    try:
+        lines = [line.strip() for line in page2_text.splitlines() if line.strip()]
+        
+        # Find the starting point of the table data
+        data_start = None
+        for i, line in enumerate(lines):
+            if re.match(r"^\d{6}$", line):  # Looking for a 6-digit SKU
+                data_start = i
+                break
+                
+        if data_start is None:
+            st.warning("⚠️ Could not find table start in page 2")
+            return []
+        
+        entries = []
+        while data_start + 6 < len(lines):  # Reduced from 10 to 6 for safety
+            try:
+                sku = lines[data_start]
+                desc = lines[data_start + 1]
+                barcode = lines[data_start + 2]
+                style = lines[data_start + 6]
+                
+                # Validation checks
+                if (re.match(r"^\d{6}$", sku) and 
+                    re.match(r"^\d{13}$", barcode) and 
+                    re.match(r"^\d{6}$", style)):
+                    
+                    clean_desc = desc.split(":")[0].strip() if ":" in desc else desc.strip()
+                    entries.append({
+                        "sku": sku,
+                        "sku_description": clean_desc,
+                        "barcode": barcode,
+                        "style": style
+                    })
+                    data_start += 11  # Move to next entry
+                else:
+                    data_start += 1  # Move forward slowly if validation fails
+                    
+            except IndexError:
+                break  # Reached end of lines
+                
+        if not entries:
+            st.warning("⚠️ No valid entries found in the table")
+            
+        return entries
+        
+    except Exception as e:
+        st.error(f"Error extracting table: {str(e)}")
+        return []
 
     colour = st.text_input("Enter Colour:", key="pepandco_colour")
     sku_description_input = st.text_input("Enter Description:", key="pepandco_description")

@@ -1693,21 +1693,45 @@ def process_pep_and_co_pdf(uploaded_file):
             )
 
 # ========== MAIN APP ==========
-st.title("PEPCO/PEP&CO Data Processor")
+# ========== MAIN APP ==========
+def main():
+    st.title("PEPCO/PEP&CO Data Processor")
 
-# Select which brand to process
-brand = st.radio("Select Brand", ("PEPCO", "PEP&CO"))
+    # Use a session state to track brand selection
+    if 'brand' not in st.session_state:
+        st.session_state.brand = "PEPCO"
 
-if brand == "PEPCO":
-    st.subheader("PEPCO Data Processing")
-    uploaded_pdf = st.file_uploader("Upload PEPCO Data file", type=["pdf"])
-    if uploaded_pdf:
-        process_pepco_pdf(uploaded_pdf)
-else:
-    st.subheader("PEP&CO Data Processing")
-    uploaded_file = st.file_uploader("Upload PEP&CO PDF", type="pdf")
-    if uploaded_file:
-        process_pep_and_co_pdf(uploaded_file)
+    # Radio button with unique key
+    brand = st.radio(
+        "Select Brand", 
+        ("PEPCO", "PEP&CO"), 
+        key="brand_selector_radio",
+        index=0 if st.session_state.brand == "PEPCO" else 1
+    )
+    
+    # Update session state
+    st.session_state.brand = brand
 
+    if brand == "PEPCO":
+        st.subheader("PEPCO Data Processing")
+        uploaded_pdf = st.file_uploader(
+            "Upload PEPCO Data file", 
+            type=["pdf"], 
+            key="pepco_file_uploader"
+        )
+        if uploaded_pdf:
+            process_pepco_pdf(uploaded_pdf)
+    else:
+        st.subheader("PEP&CO Data Processing")
+        uploaded_file = st.file_uploader(
+            "Upload PEP&CO PDF", 
+            type="pdf", 
+            key="pepandco_file_uploader"
+        )
+        if uploaded_file:
+            process_pep_and_co_pdf(uploaded_file)
+
+if __name__ == "__main__":
+    main()
 st.markdown("---")
 st.caption("This app developed by Ovi")

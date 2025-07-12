@@ -847,17 +847,17 @@ def process_pep_and_co_pdf(uploaded_file):
 # ========== MAIN APP ==========
 st.title("PEPCO/PEP&CO Data Processor")
 
-# Select which brand to process
-brand = st.radio("Select Brand", ("PEPCO", "PEP&CO"))
+# Select which brand to process with a unique key
+brand = st.radio("Select Brand", ("PEPCO", "PEP&CO"), key="brand_selector")
 
 if brand == "PEPCO":
     st.subheader("PEPCO Data Processing")
-    uploaded_pdf = st.file_uploader("Upload PEPCO Data file", type=["pdf"])
+    uploaded_pdf = st.file_uploader("Upload PEPCO Data file", type=["pdf"], key="pepco_uploader")
     if uploaded_pdf:
         process_pepco_pdf(uploaded_pdf)
 else:
     st.subheader("PEP&CO Data Processing")
-    uploaded_file = st.file_uploader("Upload PEP&CO PDF", type="pdf")
+    uploaded_file = st.file_uploader("Upload PEP&CO PDF", type="pdf", key="pepandco_uploader")
     if uploaded_file:
         process_pep_and_co_pdf(uploaded_file)
 

@@ -450,9 +450,6 @@ def process_pep_and_co_pdf(uploaded_file):
                     mime="text/csv"
                 )
                 
-    except Exception as e:
-        st.error(f"❌ An error occurred: {str(e)}")
-        return None
 
 # ========== MAIN APP ==========
 def main():

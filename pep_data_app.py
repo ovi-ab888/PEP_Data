@@ -9,6 +9,7 @@ import csv as pycsv
 from datetime import datetime, timedelta
 import os
 
+import pandas as pd
 
 # ========== PRICE DATA (For PEPCO) ==========
 PRICE_DATA = {

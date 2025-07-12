@@ -369,6 +369,9 @@ def process_pep_and_co_pdf(uploaded_file):
             st.error("❌ No product entries found in the PDF")
             return None
 
+        # Initialize variables to store processed data
+        processed_df = None
+
         with st.form("pepandco_form"):
             colour = st.text_input("Enter Colour:", key="pepandco_colour")
             sku_description_input = st.text_input("Enter Description:", key="pepandco_description")
@@ -430,26 +433,28 @@ def process_pep_and_co_pdf(uploaded_file):
                         "colour": colour
                     })
 
-                df = pd.DataFrame(processed_data)[[
+                processed_df = pd.DataFrame(processed_data)[[
                     "Order_Number", "Supplier_name", "today_date",
                     "Pack_SKU", "Pack_Barcode", "Department",
                     "story", "sku_description", "COLOUR_SKU", "STYLE", "STYLE_code", 
                     "Batch", "barcode", "colour"
                 ]]
 
-                st.success("✅ Processing complete!")
-                st.subheader("Edit Before Download")
-                edited_df = st.data_editor(df)
+        # Display results and download button outside the form
+        if processed_df is not None:
+            st.success("✅ Processing complete!")
+            st.subheader("Edit Before Download")
+            edited_df = st.data_editor(processed_df)
 
-                csv_buffer = StringIO()
-                edited_df.to_csv(csv_buffer, sep=';', quoting=csv.QUOTE_ALL, index=False)
-                
-                st.download_button(
-                    "📥 Download CSV",
-                    csv_buffer.getvalue().encode('utf-8-sig'),
-                    file_name=f"pepco_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv"
-                )
+            csv_buffer = StringIO()
+            edited_df.to_csv(csv_buffer, sep=';', quoting=csv.QUOTE_ALL, index=False)
+            
+            st.download_button(
+                "📥 Download CSV",
+                csv_buffer.getvalue().encode('utf-8-sig'),
+                file_name=f"pepco_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
                 
     except Exception as e:
         st.error(f"❌ An error occurred: {str(e)}")

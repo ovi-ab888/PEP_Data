@@ -57,6 +57,7 @@ def find_closest_price(pln_value):
         return None
 
 # ========== PEPCO FUNCTIONS ==========
+
 @st.cache_data(ttl=600)
 def load_product_translations():
     sheet_id = "12QAe57IsVCa9-0D06tXYUUpfHbpRTsl2"
@@ -102,6 +103,66 @@ def format_product_translations(product_name, translation_row):
         formatted.append(f"|{lang}| {formatted_value}")
     
     return " ".join(formatted)
+
+COLLECTION_MAPPING = {
+    # Baby boys outerwear
+    'b': {
+        'CROCO CLUB': 'MODERN 1',
+        'LITTLE SAILOR': 'MODERN 2',
+        'EXPLORE THE WORLD': 'MODERN 3',
+        'JURASIC ADVENTURE': 'MODERN 4',
+        'WESTERN SPIRIT': 'CLASSIC 1',
+        'SUMMER FUN': 'CLASSIC 2'
+    },
+    # Baby girls outerwear
+    'a': {
+        'Rainbow Girl': 'MODERN 1',
+        'NEONS PICNIC': 'MODERN 2',
+        'COUNTRY SIDE': 'ROMANTIC 2',
+        'ESTER GARDENG': 'ROMANTIC 3'
+    },
+    # Baby boys essentials
+    'd': {
+        'LITTLE TREASURE': 'MODERN 1',
+        'DINO FRIENDS': 'CLASSIC 1',
+        'EXOTIC ANIMALS': 'CLASSIC 2'
+    },
+    # Baby girls essentials
+    'd_girls': {
+        'SWEEET PASTELS': 'MODERN 1',
+        'PORCELAIN': 'ROMANTIC 2',
+        'SUMMER VIBE': 'ROMANTIC 3'
+    },
+    # Younger girls outerwear (from previous requirement)
+    'yg': {
+        'CUTE JUMP': 'COLLECTION_1 G',
+        'SWEET HEART': 'COLLECTION_2 G',
+        'DAISY': 'COLLECTION_3 G',
+        'SPECIAL OCC': 'COLLECTION_4 G',
+        'LILALOV': 'COLLECTION_5 G',
+        'COOL GIRL': 'COLLECTION_6 G',
+        'DEL MAR': 'COLLECTION_7 G'
+    }
+}
+
+def get_classification_type(item_class):
+    """Determine the classification type based on item classification text"""
+    if not item_class:
+        return None
+        
+    item_class = item_class.lower()
+    
+    if 'younger girls outerwear' in item_class:
+        return 'yg'
+    elif 'baby boys outerwear' in item_class:
+        return 'b'
+    elif 'baby girls outerwear' in item_class:
+        return 'a'
+    elif 'baby boys essentials' in item_class:
+        return 'd'
+    elif 'baby girls essentials' in item_class:
+        return 'd_girls'
+    return None
 
 def extract_colour_from_page2(text, page_number=1):
     try:
@@ -178,6 +239,18 @@ def extract_data_from_pdf(file):
         supplier_code = re.search(r"Supplier product code\s*\.{2,}\s*(.+)", page1)
         supplier_name = re.search(r"Supplier name\s*\.{2,}\s*(.+)", page1)
 
+        # Get classification and collection
+        item_class_value = item_class.group(1).strip() if item_class else "UNKNOWN"
+        class_type = get_classification_type(item_class_value)
+        collection_value = collection.group(1).split("-")[0].strip() if collection else "UNKNOWN"
+
+        # Apply collection transformation
+        if class_type and class_type in COLLECTION_MAPPING:
+            for orig_collection, new_collection in COLLECTION_MAPPING[class_type].items():
+                if orig_collection.upper() in collection_value.upper():
+                    collection_value = new_collection
+                    break
+
         colour = extract_colour_from_page2(doc[1].get_text())
         page3 = doc[2].get_text()
         skus = re.findall(r"\b\d{8}\b", page3)
@@ -190,10 +263,10 @@ def extract_data_from_pdf(file):
             "STYLE_CODE": style_code.group() if style_code else "UNKNOWN",
             "COLOUR": colour,
             "Supplier_product_code": supplier_code.group(1).strip() if supplier_code else "UNKNOWN",
-            "Item_classification": item_class.group(1).strip() if item_class else "UNKNOWN",
+            "Item_classification": item_class_value,
             "Supplier_name": supplier_name.group(1).strip() if supplier_name else "UNKNOWN",
             "today_date": datetime.today().strftime('%d-%m-%Y'),
-            "COLLECTION": collection.group(1).split("-")[0].strip() if collection else "UNKNOWN",
+            "COLLECTION": collection_value,
             "COLOUR_SKU": f"{colour} • SKU {sku}",
             "STYLE": f"STYLE {style_code.group()} • {style_suffix}" if style_code else "STYLE UNKNOWN",
             "Batch": f"Batch no. {batch}",

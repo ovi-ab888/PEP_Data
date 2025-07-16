@@ -136,7 +136,7 @@ COLLECTION_MAPPING = {
     # Younger girls outerwear (from previous requirement)
     'yg': {
         'CUTE_JUMP': 'COLLECTION_1 G',
-        'SWEET HEART': 'COLLECTION_2 G',
+        'SWEET_HEART': 'COLLECTION_2 G',
         'DAISY': 'COLLECTION_3 G',
         'SPECIAL OCC': 'COLLECTION_4 G',
         'LILALOV': 'COLLECTION_5 G',

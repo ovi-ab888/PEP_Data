@@ -168,7 +168,7 @@ def extract_colour_from_page2(text, page_number=1):
     try:
         lines = [line.strip() for line in text.splitlines() if line.strip()]
         skip_keywords = ["PURCHASE", "COLOUR", "TOTAL", "PANTONE", "SUPPLIER", 
-                        "PRICE", "ORDERED", "SIZES", "TPG", "TPX", "USD", "NIP", 
+                        "PRICE", "ORDERED", "SIZES", "TPG", "XS", "S", "M", "L", "XL", "XXL", "USD", "NIP", 
                         "PEPCO", "Poland", "ul. Strzeszyńska 73A, 60-479 Poznań", 
                         "NIP 782-21-31-157"]
         

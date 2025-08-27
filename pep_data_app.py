@@ -286,6 +286,7 @@ def process_pepco_pdf(uploaded_pdf):
         result_data = extract_data_from_pdf(uploaded_pdf)
         
         if result_data:
+            # --- Department & Product selection ---
             depts = translations_df['DEPARTMENT'].dropna().unique().tolist()
             selected_dept = st.selectbox(
                 "Select Department",
@@ -301,50 +302,73 @@ def process_pepco_pdf(uploaded_pdf):
                 key="pepco_product_select"
             )
 
+            # Build base dataframe from parsed PDF
             df = pd.DataFrame(result_data)
+
+            # Attach multilingual product text
             product_row = filtered[filtered['PRODUCT_NAME'] == product_type]
             if not product_row.empty:
                 df['product_name'] = format_product_translations(product_type, product_row.iloc[0])
             else:
                 df['product_name'] = ""
 
-            pln_price = st.number_input(
-                "Enter PLN Price",
-                min_value=0.0,
-                step=0.01,
-                format="%.2f",
-                key="pepco_pln_price"
-            )
-            
-            if pln_price:
+            # --- PLN input: text_input + validation (supports 3+ digits, comma or dot) ---
+            pln_price_raw = st.text_input("Enter PLN Price", key="pepco_pln_price")
+
+            pln_price = None
+            if pln_price_raw.strip():
+                try:
+                    pln_price = float(pln_price_raw.replace(",", "."))
+                    if pln_price < 0:
+                        st.error("❌ Price can’t be negative.")
+                        pln_price = None
+                except ValueError:
+                    st.error("❌ Please enter a valid number like 12.50 or 12,50")
+                    pln_price = None
+
+            # Proceed only when a valid number is entered (including 0.00)
+            if pln_price is not None:
                 currency_values = find_closest_price(pln_price)
                 if currency_values:
+                    # Fill mapped currencies
                     for cur in ['EUR', 'BGN', 'BAM', 'RON', 'CZK', 'RSD', 'HUF']:
                         df[cur] = currency_values.get(cur, "")
+
+                    # Format PLN for output
                     df['PLN'] = format_number(pln_price, 'PLN')
 
+                    # Column order for export
                     final_cols = [
                         "Order_ID", "STYLE_CODE", "COLOUR", "Supplier_product_code", 
                         "Item_classification", "Supplier_name", "today_date", "COLLECTION", 
                         "COLOUR_SKU", "STYLE", "Batch", "barcode", "EUR", "BGN", "BAM", 
                         "PLN", "RON", "CZK", "RSD", "HUF", "product_name"
                     ]
+                    # Ensure all expected columns exist before reordering (robustness)
+                    for c in final_cols:
+                        if c not in df.columns:
+                            df[c] = ""  # add missing columns as empty
+                    df = df[final_cols]
 
                     st.success("✅ Done!")
                     st.subheader("Edit Before Download")
 
+                    # Let user tweak values
                     edited_df = st.data_editor(df)
 
+                    # Create CSV with ; delimiter and quoted fields
                     csv_buffer = StringIO()
                     writer = pycsv.writer(csv_buffer, delimiter=';', quoting=pycsv.QUOTE_ALL)
                     writer.writerow(edited_df.columns)
                     for row in edited_df.itertuples(index=False):
                         writer.writerow(row)
 
+                    # Download button
+                    safe_name = os.path.splitext(uploaded_pdf.name)[0] if hasattr(uploaded_pdf, "name") else "pepco_output"
                     st.download_button(
                         "📥 Download CSV",
                         csv_buffer.getvalue().encode('utf-8-sig'),
-                        file_name=f"{os.path.splitext(uploaded_pdf.name)[0]}.csv",
+                        file_name=f"{safe_name}.csv",
                         mime="text/csv"
                     )
 
@@ -587,6 +611,7 @@ if __name__ == "__main__":
 
 st.markdown("---")
 st.caption("This app developed by Ovi")
+
 
 
 
